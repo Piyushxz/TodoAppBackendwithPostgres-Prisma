@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express"
 import { string, z } from "zod";
+import { config } from "../config";
+import jwt from "jsonwebtoken"
+import dotenv from "dotenv"
+
+
+dotenv.config()
 const client = new PrismaClient()
 const app = express()
 
@@ -13,13 +19,7 @@ app.get("/user",async (req,res)=>{
 })
 
 
-app.get("signup",async (req,res)=>{
-
-    const username = req.body.username;
-    const email = req.body.email;
-    const password = req.body.password;
-    const age = req.body.age
-    const city = req.body.city
+app.post("/signup",async (req,res)=>{
 
    
     const requiredBody = z.object({
@@ -54,6 +54,35 @@ app.get("signup",async (req,res)=>{
     }
 
 
+})
+
+app.post("/signin", async (req,res)=>{
+
+    const username = req.body.username;
+    const password = req.body.password;
+
+    let foundUser = null;
+     foundUser = await client.user.findFirst({
+        where:{
+            username:username,
+            password:password
+        }
+    })
+
+    if(!foundUser){
+        res.status(400).json({message:"User not found/Invalid Credentials"})
+        return ;
+    }
+    else{
+        try{
+
+            const token = jwt.sign({id:foundUser.id},config.secretKey)
+            res.status(200).json({token:token,message:"SignIn success"})
+
+        }catch(err){
+            res.status(500).json({message:"Could Not SignIN"})
+        }
+    }
 })
 
 

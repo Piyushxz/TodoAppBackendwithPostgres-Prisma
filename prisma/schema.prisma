@@ -23,8 +23,10 @@ model Todo{
   title String
   description String
   done Boolean
+  time DateTime @default(now())
   userId Int
   user User @relation(fields: [userId],references: [id])
 
 
 }
+
